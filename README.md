@@ -1,0 +1,1524 @@
+[index.html](https://github.com/user-attachments/files/24962962/index.html)
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新手任务中心</title>
+    <style>
+        :root {
+            --color-primary: #32b8c6;
+            --color-primary-hover: #29a6b4;
+            --color-primary-light: rgba(50, 184, 198, 0.1);
+            --color-success: #34c759;
+            --color-warning: #ff9500;
+            --color-danger: #ff3b30;
+            --color-bg: #f8f9fa;
+            --color-card: #ffffff;
+            --color-text: #1a1a1a;
+            --color-text-light: #666666;
+            --color-border: #e5e5e5;
+            --radius: 12px;
+            --shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', sans-serif;
+            background: var(--color-bg);
+            color: var(--color-text);
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* 顶部进度统计 */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: var(--radius);
+            padding: 24px;
+            color: white;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 16px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .stat-item {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 12px;
+            border-radius: 8px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: bold;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-top: 4px;
+        }
+
+        /* 横向时间轴容器 */
+        .timeline-container {
+            background: var(--color-card);
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow);
+            overflow-x: auto;
+        }
+
+        .timeline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .timeline-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .timeline-progress {
+            font-size: 14px;
+            color: var(--color-text-light);
+        }
+
+        /* 横向时间轴 */
+        .timeline {
+            display: flex;
+            gap: 16px;
+            padding: 10px 0;
+            position: relative;
+            min-width: min-content;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            top: 50px;
+            left: 40px;
+            right: 40px;
+            height: 3px;
+            background: linear-gradient(90deg, var(--color-border) 0%, var(--color-border) 100%);
+            z-index: 0;
+        }
+
+        /* 时间轴节点 */
+        .timeline-node {
+            flex: 0 0 200px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .node-point {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: white;
+            border: 3px solid var(--color-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 12px;
+            font-size: 20px;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .timeline-node.active .node-point {
+            border-color: var(--color-primary);
+            background: var(--color-primary);
+            box-shadow: 0 0 0 4px rgba(50, 184, 198, 0.2);
+        }
+
+        .timeline-node.completed .node-point {
+            border-color: var(--color-success);
+            background: var(--color-success);
+        }
+
+        .timeline-node.locked .node-point {
+            opacity: 0.4;
+        }
+
+        /* 任务卡片 - 紧凑版 */
+        .mini-task-card {
+            background: white;
+            border: 2px solid var(--color-border);
+            border-radius: 10px;
+            padding: 12px;
+            transition: all 0.3s;
+        }
+
+        .timeline-node.active .mini-task-card {
+            border-color: var(--color-primary);
+            box-shadow: 0 2px 12px rgba(50, 184, 198, 0.15);
+        }
+
+        .timeline-node.completed .mini-task-card {
+            border-color: var(--color-success);
+            background: rgba(52, 199, 89, 0.05);
+        }
+
+        .timeline-node.locked .mini-task-card {
+            opacity: 0.5;
+        }
+
+        .mini-task-phase {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--color-text-light);
+            margin-bottom: 6px;
+            text-align: center;
+        }
+
+        .mini-task-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            text-align: center;
+            line-height: 1.3;
+        }
+
+        .mini-task-requirement {
+            font-size: 12px;
+            color: var(--color-text-light);
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        /* 进度条 - 紧凑版 */
+        .mini-progress {
+            margin-bottom: 8px;
+        }
+
+        .mini-progress-bar {
+            width: 100%;
+            height: 6px;
+            background: var(--color-border);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 4px;
+        }
+
+        .mini-progress-fill {
+            height: 100%;
+            background: var(--color-primary);
+            border-radius: 3px;
+            transition: width 0.4s ease;
+        }
+
+        .mini-progress-text {
+            font-size: 11px;
+            color: var(--color-text-light);
+            text-align: center;
+        }
+
+        /* 奖励标签 - 紧凑版 */
+        .mini-reward {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            padding: 6px 8px;
+            background: var(--color-primary-light);
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+
+        .mini-reward-icon {
+            font-size: 14px;
+        }
+
+        .mini-reward-text {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--color-primary);
+        }
+
+        /* 倒计时 - 紧凑版 */
+        .mini-countdown {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            font-size: 11px;
+            color: var(--color-warning);
+            margin-bottom: 8px;
+        }
+
+        /* 按钮 - 紧凑版 */
+        .mini-button {
+            width: 100%;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .mini-button.btn-primary {
+            background: var(--color-primary);
+            color: white;
+        }
+
+        .mini-button.btn-success {
+            background: var(--color-success);
+            color: white;
+        }
+
+        .mini-button.btn-disabled {
+            background: var(--color-border);
+            color: var(--color-text-light);
+            cursor: not-allowed;
+        }
+
+        .mini-button.btn-locked {
+            background: var(--color-border);
+            color: var(--color-text-light);
+            cursor: not-allowed;
+        }
+
+        /* 总进度条 */
+        .overall-progress {
+            background: var(--color-card);
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow);
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .progress-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .progress-percentage {
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--color-primary);
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 12px;
+            background: var(--color-border);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--color-primary), #5dd9e9);
+            border-radius: 6px;
+            transition: width 0.6s ease;
+        }
+
+        /* 任务卡片 */
+        .task-section {
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: var(--color-primary);
+            border-radius: 2px;
+            margin-right: 12px;
+        }
+
+        .task-card {
+            background: var(--color-card);
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: var(--shadow);
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .task-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+        }
+
+        .task-card.completed {
+            border-color: var(--color-success);
+            background: rgba(52, 199, 89, 0.05);
+        }
+
+        .task-card.expired {
+            opacity: 0.6;
+            border-color: var(--color-danger);
+        }
+
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .task-title-group {
+            flex: 1;
+        }
+
+        .task-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+        }
+
+        .task-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .badge-daily {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .badge-growth {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .badge-special {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .task-description {
+            font-size: 14px;
+            color: var(--color-text-light);
+            margin-bottom: 16px;
+        }
+
+        .task-reward {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: var(--color-primary-light);
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+
+        .reward-icon {
+            font-size: 24px;
+        }
+
+        .reward-text {
+            flex: 1;
+        }
+
+        .reward-label {
+            font-size: 12px;
+            color: var(--color-text-light);
+        }
+
+        .reward-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--color-primary);
+        }
+
+        .task-progress-section {
+            margin-bottom: 16px;
+        }
+
+        .task-progress-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .progress-text {
+            color: var(--color-text-light);
+        }
+
+        .progress-count {
+            font-weight: 600;
+            color: var(--color-primary);
+        }
+
+        .task-progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--color-border);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .task-progress-fill {
+            height: 100%;
+            background: var(--color-primary);
+            border-radius: 4px;
+            transition: width 0.4s ease;
+        }
+
+        .task-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .countdown {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: var(--color-warning);
+            font-weight: 500;
+        }
+
+        .countdown.expired {
+            color: var(--color-danger);
+        }
+
+        .countdown-icon {
+            font-size: 16px;
+        }
+
+        .task-button {
+            padding: 10px 24px;
+            border: none;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--color-primary);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: var(--color-primary-hover);
+            transform: scale(1.05);
+        }
+
+        .btn-success {
+            background: var(--color-success);
+            color: white;
+        }
+
+        .btn-success:hover:not(:disabled) {
+            background: #2db84e;
+            animation: pulse 0.5s;
+        }
+
+        .btn-disabled {
+            background: var(--color-border);
+            color: var(--color-text-light);
+            cursor: not-allowed;
+        }
+
+        /* 状态标签 */
+        .status-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-completed {
+            background: rgba(52, 199, 89, 0.15);
+            color: var(--color-success);
+        }
+
+        .status-in-progress {
+            background: rgba(255, 149, 0, 0.15);
+            color: var(--color-warning);
+        }
+
+        /* 奖励弹窗 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--color-card);
+            border-radius: var(--radius);
+            padding: 32px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+            animation: bounce 0.6s;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 12px;
+        }
+
+        .modal-message {
+            font-size: 16px;
+            color: var(--color-text-light);
+            margin-bottom: 24px;
+        }
+
+        .modal-button {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            background: var(--color-primary);
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .modal-button:hover {
+            background: var(--color-primary-hover);
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 600px) {
+            body {
+                padding: 12px;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+
+            .header h1 {
+                font-size: 20px;
+            }
+
+            .task-footer {
+                flex-direction: column;
+                gap: 12px;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 横向时间轴任务 -->
+        <div class="timeline-container">
+            <div class="timeline-header">
+                <span class="timeline-title">📍 90天智驾成长路径</span>
+                <span class="timeline-progress"><span id="completedTasks">0</span>/6 任务完成</span>
+            </div>
+            
+            <div class="timeline">
+                <!-- 任务1: 交付7天内 - 自动泊车3次 -->
+                <div class="timeline-node active" data-task-id="auto-park">
+                    <div class="node-point">🅿️</div>
+                    <div class="mini-task-card">
+                        <div class="mini-task-phase">交付 0-7天</div>
+                        <div class="mini-task-title">自动泊车体验</div>
+                        <div class="mini-task-requirement">完成自动泊车 3 次</div>
+                        
+                        <div class="mini-progress">
+                            <div class="mini-progress-bar">
+                                <div class="mini-progress-fill" id="progress-auto-park" style="width: 0%"></div>
+                            </div>
+                            <div class="mini-progress-text"><span id="count-auto-park">0</span>/3 次</div>
+                        </div>
+                        
+                        <div class="mini-reward">
+                            <span class="mini-reward-icon">🎁</span>
+                            <span class="mini-reward-text">+10 积分</span>
+                        </div>
+                        
+                        <div class="mini-countdown">
+                            ⏰ 剩余 <span class="countdown-timer" data-end-time="2026-02-06T23:59:59">4天</span>
+                        </div>
+                        
+                        <button class="mini-button btn-primary" onclick="simulateProgress('auto-park')">待完成</button>
+                    </div>
+                </div>
+
+                <!-- 任务2: 交付14天内 - 智驾60km -->
+                <div class="timeline-node active" data-task-id="drive-14">
+                    <div class="node-point">🛣️</div>
+                    <div class="mini-task-card">
+                        <div class="mini-task-phase">交付 0-14天</div>
+                        <div class="mini-task-title">智驾里程挑战</div>
+                        <div class="mini-task-requirement">累计智驾 60 km</div>
+                        
+                        <div class="mini-progress">
+                            <div class="mini-progress-bar">
+                                <div class="mini-progress-fill" id="progress-drive-14" style="width: 0%"></div>
+                            </div>
+                            <div class="mini-progress-text"><span id="count-drive-14">0</span>/60 km</div>
+                        </div>
+                        
+                        <div class="mini-reward">
+                            <span class="mini-reward-icon">🎲</span>
+                            <span class="mini-reward-text">抽奖资格</span>
+                        </div>
+                        
+                        <div class="mini-countdown">
+                            ⏰ 剩余 <span class="countdown-timer" data-end-time="2026-02-13T23:59:59">11天</span>
+                        </div>
+                        
+                        <button class="mini-button btn-primary" onclick="simulateProgress('drive-14')">待完成</button>
+                    </div>
+                </div>
+
+                <!-- 任务3: 交付30天内 - 智驾60km + 勋章 -->
+                <div class="timeline-node active" data-task-id="drive-30-badge">
+                    <div class="node-point">🏅</div>
+                    <div class="mini-task-card">
+                        <div class="mini-task-phase">交付 0-30天</div>
+                        <div class="mini-task-title">勋章解锁</div>
+                        <div class="mini-task-requirement">累计智驾 60 km</div>
+                        
+                        <div class="mini-progress">
+                            <div class="mini-progress-bar">
+                                <div class="mini-progress-fill" id="progress-drive-30-badge" style="width: 0%"></div>
+                            </div>
+                            <div class="mini-progress-text"><span id="count-drive-30-badge">0</span>/60 km</div>
+                        </div>
+                        
+                        <div class="mini-reward">
+                            <span class="mini-reward-icon">🏆</span>
+                            <span class="mini-reward-text">专属勋章</span>
+                        </div>
+                        
+                        <div class="mini-countdown">
+                            ⏰ 剩余 <span class="countdown-timer" data-end-time="2026-03-02T23:59:59">27天</span>
+                        </div>
+                        
+                        <button class="mini-button btn-primary" onclick="simulateProgress('drive-30-badge')">待完成</button>
+                    </div>
+                </div>
+
+                <!-- 任务4: 交付30天内 - 里程渗透率50% -->
+                <div class="timeline-node active" data-task-id="penetration-30">
+                    <div class="node-point">📈</div>
+                    <div class="mini-task-card">
+                        <div class="mini-task-phase">交付 0-30天</div>
+                        <div class="mini-task-title">第一阶段里程占比达标</div>
+                        <div class="mini-task-requirement">智驾里程占比 ≥50%</div>
+                        
+                        <div class="mini-progress">
+                            <div class="mini-progress-bar">
+                                <div class="mini-progress-fill" id="progress-penetration-30" style="width: 0%"></div>
+                            </div>
+                            <div class="mini-progress-text"><span id="count-penetration-30">0</span>%</div>
+                        </div>
+                        
+                        <div class="mini-reward">
+                            <span class="mini-reward-icon">🎲</span>
+                            <span class="mini-reward-text">抽奖资格</span>
+                        </div>
+                        
+                        <div class="mini-countdown">
+                            ⏰ 剩余 <span class="countdown-timer" data-end-time="2026-03-02T23:59:59">27天</span>
+                        </div>
+                        
+                        <button class="mini-button btn-primary" onclick="simulateProgress('penetration-30')">待完成</button>
+                    </div>
+                </div>
+
+                <!-- 任务5: 交付30-60天 - 里程渗透率50% -->
+                <div class="timeline-node locked" data-task-id="penetration-60">
+                    <div class="node-point">📊</div>
+                    <div class="mini-task-card">
+                        <div class="mini-task-phase">交付 30-60天</div>
+                        <div class="mini-task-title">第二阶段里程占比达标</div>
+                        <div class="mini-task-requirement">智驾里程占比 ≥50%</div>
+                        
+                        <div class="mini-progress">
+                            <div class="mini-progress-bar">
+                                <div class="mini-progress-fill" id="progress-penetration-60" style="width: 0%"></div>
+                            </div>
+                            <div class="mini-progress-text"><span id="count-penetration-60">0</span>%</div>
+                        </div>
+                        
+                        <div class="mini-reward">
+                            <span class="mini-reward-icon">🎲</span>
+                            <span class="mini-reward-text">抽奖资格</span>
+                        </div>
+                        
+                        <div class="mini-countdown">
+                            ⏰ 剩余 <span class="countdown-timer" data-end-time="2026-04-01T23:59:59">57天</span>
+                        </div>
+                        
+                        <button class="mini-button btn-locked" disabled>未解锁</button>
+                    </div>
+                </div>
+
+                <!-- 任务6: 交付60-90天 - 里程渗透率50% -->
+                <div class="timeline-node locked" data-task-id="penetration-90">
+                    <div class="node-point">🎯</div>
+                    <div class="mini-task-card">
+                        <div class="mini-task-phase">交付 60-90天</div>
+                        <div class="mini-task-title">第三阶段里程占比达标</div>
+                        <div class="mini-task-requirement">智驾里程占比 ≥50%</div>
+                        
+                        <div class="mini-progress">
+                            <div class="mini-progress-bar">
+                                <div class="mini-progress-fill" id="progress-penetration-90" style="width: 0%"></div>
+                            </div>
+                            <div class="mini-progress-text"><span id="count-penetration-90">0</span>%</div>
+                        </div>
+                        
+                        <div class="mini-reward">
+                            <span class="mini-reward-icon">🎲</span>
+                            <span class="mini-reward-text">抽奖资格</span>
+                        </div>
+                        
+                        <div class="mini-countdown">
+                            ⏰ 剩余 <span class="countdown-timer" data-end-time="2026-05-01T23:59:59">87天</span>
+                        </div>
+                        
+                        <button class="mini-button btn-locked" disabled>未解锁</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 总进度 -->
+        <div class="overall-progress">
+            <div class="progress-header">
+                <span class="progress-title">智驾成长总进度</span>
+                <span class="progress-percentage" id="overallPercentage">0%</span>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="overallProgressBar" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <!-- 新手成长任务 - 已隐藏 -->
+        <div class="task-section" style="display: none;">
+            <h2 class="section-title">新手成长任务</h2>
+            
+            <div class="task-card" data-task-id="1">
+                <div class="task-header">
+                    <div class="task-title-group">
+                        <div class="task-title">
+                            完善个人资料
+                            <span class="task-badge badge-growth">成长任务</span>
+                        </div>
+                        <div class="task-description">上传头像、填写昵称和个人简介</div>
+                    </div>
+                </div>
+                
+                <div class="task-reward">
+                    <span class="reward-icon">🎁</span>
+                    <div class="reward-text">
+                        <div class="reward-label">任务奖励</div>
+                        <div class="reward-value">+100 积分</div>
+                    </div>
+                </div>
+
+                <div class="task-progress-section">
+                    <div class="task-progress-info">
+                        <span class="progress-text">完成进度</span>
+                        <span class="progress-count">0/3</span>
+                    </div>
+                    <div class="task-progress-bar">
+                        <div class="task-progress-fill" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div class="task-footer">
+                    <div class="countdown">
+                        <span class="countdown-icon">⏰</span>
+                        <span>剩余: <span class="countdown-timer" data-end-time="2026-02-06T23:59:59">7天</span></span>
+                    </div>
+                    <button class="task-button btn-primary" onclick="startTask(1)">开始任务</button>
+                </div>
+            </div>
+
+            <div class="task-card" data-task-id="2">
+                <div class="task-header">
+                    <div class="task-title-group">
+                        <div class="task-title">
+                            首次发布内容
+                            <span class="task-badge badge-growth">成长任务</span>
+                        </div>
+                        <div class="task-description">发布你的第一条动态或文章</div>
+                    </div>
+                </div>
+                
+                <div class="task-reward">
+                    <span class="reward-icon">💎</span>
+                    <div class="reward-text">
+                        <div class="reward-label">任务奖励</div>
+                        <div class="reward-value">+150 积分 + 新手徽章</div>
+                    </div>
+                </div>
+
+                <div class="task-progress-section">
+                    <div class="task-progress-info">
+                        <span class="progress-text">完成进度</span>
+                        <span class="progress-count">0/1</span>
+                    </div>
+                    <div class="task-progress-bar">
+                        <div class="task-progress-fill" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div class="task-footer">
+                    <div class="countdown">
+                        <span class="countdown-icon">⏰</span>
+                        <span>剩余: <span class="countdown-timer" data-end-time="2026-02-06T23:59:59">7天</span></span>
+                    </div>
+                    <button class="task-button btn-primary" onclick="startTask(2)">开始任务</button>
+                </div>
+            </div>
+
+            <div class="task-card" data-task-id="3">
+                <div class="task-header">
+                    <div class="task-title-group">
+                        <div class="task-title">
+                            关注5位用户
+                            <span class="task-badge badge-growth">成长任务</span>
+                        </div>
+                        <div class="task-description">关注感兴趣的创作者，发现更多精彩内容</div>
+                    </div>
+                </div>
+                
+                <div class="task-reward">
+                    <span class="reward-icon">⭐</span>
+                    <div class="reward-text">
+                        <div class="reward-label">任务奖励</div>
+                        <div class="reward-value">+80 积分</div>
+                    </div>
+                </div>
+
+                <div class="task-progress-section">
+                    <div class="task-progress-info">
+                        <span class="progress-text">完成进度</span>
+                        <span class="progress-count">0/5</span>
+                    </div>
+                    <div class="task-progress-bar">
+                        <div class="task-progress-fill" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div class="task-footer">
+                    <div class="countdown">
+                        <span class="countdown-icon">⏰</span>
+                        <span>剩余: <span class="countdown-timer" data-end-time="2026-02-06T23:59:59">7天</span></span>
+                    </div>
+                    <button class="task-button btn-primary" onclick="startTask(3)">开始任务</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 每日任务 - 已隐藏 -->
+        <div class="task-section" style="display: none;">
+            <h2 class="section-title">每日任务</h2>
+            
+            <div class="task-card" data-task-id="4">
+                <div class="task-header">
+                    <div class="task-title-group">
+                        <div class="task-title">
+                            每日签到
+                            <span class="task-badge badge-daily">每日</span>
+                        </div>
+                        <div class="task-description">连续签到可获得额外奖励</div>
+                    </div>
+                </div>
+                
+                <div class="task-reward">
+                    <span class="reward-icon">🎁</span>
+                    <div class="reward-text">
+                        <div class="reward-label">每日奖励</div>
+                        <div class="reward-value">+20 积分</div>
+                    </div>
+                </div>
+
+                <div class="task-footer">
+                    <div class="countdown">
+                        <span class="countdown-icon">⏰</span>
+                        <span>今日剩余: <span class="countdown-timer" data-end-time="2026-01-30T23:59:59">6小时</span></span>
+                    </div>
+                    <button class="task-button btn-primary" onclick="startTask(4)">立即签到</button>
+                </div>
+            </div>
+
+            <div class="task-card" data-task-id="5">
+                <div class="task-header">
+                    <div class="task-title-group">
+                        <div class="task-title">
+                            浏览内容10分钟
+                            <span class="task-badge badge-daily">每日</span>
+                        </div>
+                        <div class="task-description">浏览推荐内容，发现有趣的创作</div>
+                    </div>
+                </div>
+                
+                <div class="task-reward">
+                    <span class="reward-icon">💰</span>
+                    <div class="reward-text">
+                        <div class="reward-label">每日奖励</div>
+                        <div class="reward-value">+30 积分</div>
+                    </div>
+                </div>
+
+                <div class="task-progress-section">
+                    <div class="task-progress-info">
+                        <span class="progress-text">浏览时长</span>
+                        <span class="progress-count">0/10 分钟</span>
+                    </div>
+                    <div class="task-progress-bar">
+                        <div class="task-progress-fill" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div class="task-footer">
+                    <div class="countdown">
+                        <span class="countdown-icon">⏰</span>
+                        <span>今日剩余: <span class="countdown-timer" data-end-time="2026-01-30T23:59:59">6小时</span></span>
+                    </div>
+                    <button class="task-button btn-primary" onclick="startTask(5)">开始浏览</button>
+                </div>
+            </div>
+
+            <div class="task-card" data-task-id="6">
+                <div class="task-header">
+                    <div class="task-title-group">
+                        <div class="task-title">
+                            点赞5个内容
+                            <span class="task-badge badge-daily">每日</span>
+                        </div>
+                        <div class="task-description">为喜欢的内容点赞支持</div>
+                    </div>
+                </div>
+                
+                <div class="task-reward">
+                    <span class="reward-icon">❤️</span>
+                    <div class="reward-text">
+                        <div class="reward-label">每日奖励</div>
+                        <div class="reward-value">+15 积分</div>
+                    </div>
+                </div>
+
+                <div class="task-progress-section">
+                    <div class="task-progress-info">
+                        <span class="progress-text">完成进度</span>
+                        <span class="progress-count">0/5</span>
+                    </div>
+                    <div class="task-progress-bar">
+                        <div class="task-progress-fill" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div class="task-footer">
+                    <div class="countdown">
+                        <span class="countdown-icon">⏰</span>
+                        <span>今日剩余: <span class="countdown-timer" data-end-time="2026-01-30T23:59:59">6小时</span></span>
+                    </div>
+                    <button class="task-button btn-primary" onclick="startTask(6)">开始任务</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 限时特殊任务 - 已隐藏 -->
+        <div class="task-section" style="display: none;">
+            <h2 class="section-title">限时特殊任务</h2>
+            
+            <div class="task-card" data-task-id="7">
+                <div class="task-header">
+                    <div class="task-title-group">
+                        <div class="task-title">
+                            邀请好友注册
+                            <span class="task-badge badge-special">限时</span>
+                        </div>
+                        <div class="task-description">邀请3位好友注册，双方均可获得奖励</div>
+                    </div>
+                </div>
+                
+                <div class="task-reward">
+                    <span class="reward-icon">🏆</span>
+                    <div class="reward-text">
+                        <div class="reward-label">特殊奖励</div>
+                        <div class="reward-value">+300 积分 + 专属称号</div>
+                    </div>
+                </div>
+
+                <div class="task-progress-section">
+                    <div class="task-progress-info">
+                        <span class="progress-text">邀请进度</span>
+                        <span class="progress-count">0/3</span>
+                    </div>
+                    <div class="task-progress-bar">
+                        <div class="task-progress-fill" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div class="task-footer">
+                    <div class="countdown">
+                        <span class="countdown-icon">⏰</span>
+                        <span>剩余: <span class="countdown-timer" data-end-time="2026-02-13T23:59:59">14天</span></span>
+                    </div>
+                    <button class="task-button btn-primary" onclick="startTask(7)">邀请好友</button>
+                </div>
+            </div>
+
+            <div class="task-card" data-task-id="8">
+                <div class="task-header">
+                    <div class="task-title-group">
+                        <div class="task-title">
+                            新春活动参与
+                            <span class="task-badge badge-special">限时</span>
+                        </div>
+                        <div class="task-description">参与新春特别活动，瓜分百万奖池</div>
+                    </div>
+                </div>
+                
+                <div class="task-reward">
+                    <span class="reward-icon">🧧</span>
+                    <div class="reward-text">
+                        <div class="reward-label">活动奖励</div>
+                        <div class="reward-value">+500 积分 + 神秘礼包</div>
+                    </div>
+                </div>
+
+                <div class="task-footer">
+                    <div class="countdown">
+                        <span class="countdown-icon">⏰</span>
+                        <span>剩余: <span class="countdown-timer" data-end-time="2026-02-20T23:59:59">21天</span></span>
+                    </div>
+                    <button class="task-button btn-primary" onclick="startTask(8)">参与活动</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 奖励弹窗 -->
+    <div class="modal" id="rewardModal">
+        <div class="modal-content">
+            <div class="modal-icon">🎉</div>
+            <div class="modal-title">任务完成！</div>
+            <div class="modal-message" id="rewardMessage">恭喜你获得 +100 积分</div>
+            <button class="modal-button" onclick="closeModal()">领取奖励</button>
+        </div>
+    </div>
+
+    <script>
+        // 智驾任务数据
+        const miniTasks = {
+            'auto-park': { 
+                progress: 0, 
+                total: 3, 
+                reward: 10, 
+                title: '自动泊车体验',
+                type: 'points'
+            },
+            'drive-14': { 
+                progress: 0, 
+                total: 60, 
+                reward: '抽奖', 
+                title: '智驾里程挑战',
+                type: 'lottery'
+            },
+            'drive-30-badge': { 
+                progress: 0, 
+                total: 60, 
+                reward: '勋章', 
+                title: '勋章解锁',
+                type: 'badge'
+            },
+            'penetration-30': { 
+                progress: 0, 
+                total: 50, 
+                reward: '抽奖', 
+                title: '渗透率达标',
+                type: 'lottery',
+                unit: '%'
+            },
+            'penetration-60': { 
+                progress: 0, 
+                total: 50, 
+                reward: '抽奖', 
+                title: '进阶渗透率',
+                type: 'lottery',
+                unit: '%'
+            },
+            'penetration-90': { 
+                progress: 0, 
+                total: 50, 
+                reward: '抽奖', 
+                title: '高阶渗透率',
+                type: 'lottery',
+                unit: '%'
+            }
+        };
+
+        // 任务数据
+        const tasks = {
+            1: { progress: 0, total: 3, reward: 100, title: '完善个人资料' },
+            2: { progress: 0, total: 1, reward: 150, title: '首次发布内容' },
+            3: { progress: 0, total: 5, reward: 80, title: '关注5位用户' },
+            4: { progress: 0, total: 1, reward: 20, title: '每日签到' },
+            5: { progress: 0, total: 10, reward: 30, title: '浏览内容10分钟' },
+            6: { progress: 0, total: 5, reward: 15, title: '点赞5个内容' },
+            7: { progress: 0, total: 3, reward: 300, title: '邀请好友注册' },
+            8: { progress: 0, total: 1, reward: 500, title: '新春活动参与' }
+        };
+
+        let totalPoints = 0;
+        let completedTasksCount = 0;
+        let miniCompletedCount = 0;
+
+        // 更新倒计时
+        function updateCountdowns() {
+            const timers = document.querySelectorAll('.countdown-timer');
+            const now = new Date().getTime();
+
+            timers.forEach(timer => {
+                const endTime = new Date(timer.dataset.endTime).getTime();
+                const distance = endTime - now;
+
+                if (distance < 0) {
+                    timer.parentElement.parentElement.classList.add('expired');
+                    timer.textContent = '已过期';
+                    return;
+                }
+
+                const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+
+                if (days > 0) {
+                    timer.textContent = `${days}天`;
+                } else if (hours > 0) {
+                    timer.textContent = `${hours}小时`;
+                } else {
+                    timer.textContent = `${minutes}分钟`;
+                }
+            });
+        }
+
+        // 开始任务
+        function startTask(taskId) {
+            const task = tasks[taskId];
+            const card = document.querySelector(`[data-task-id="${taskId}"]`);
+            
+            // 模拟任务进度
+            const interval = setInterval(() => {
+                if (task.progress < task.total) {
+                    task.progress++;
+                    updateTaskProgress(taskId, card);
+                } else {
+                    clearInterval(interval);
+                    completeTask(taskId, card);
+                }
+            }, 800);
+        }
+
+        // 更新任务进度
+        function updateTaskProgress(taskId, card) {
+            const task = tasks[taskId];
+            const percentage = (task.progress / task.total) * 100;
+            
+            const progressFill = card.querySelector('.task-progress-fill');
+            const progressCount = card.querySelector('.progress-count');
+            
+            if (progressFill) {
+                progressFill.style.width = `${percentage}%`;
+            }
+            if (progressCount) {
+                progressCount.textContent = `${task.progress}/${task.total}`;
+            }
+        }
+
+        // 完成任务
+        function completeTask(taskId, card) {
+            const task = tasks[taskId];
+            
+            // 更新卡片状态
+            card.classList.add('completed');
+            
+            // 更改按钮
+            const button = card.querySelector('.task-button');
+            button.className = 'task-button btn-success';
+            button.textContent = '领取奖励';
+            button.onclick = () => claimReward(taskId, card);
+        }
+
+        // 领取奖励
+        function claimReward(taskId, card) {
+            const task = tasks[taskId];
+            
+            // 增加积分
+            totalPoints += task.reward;
+            completedTasksCount++;
+            
+            // 更新统计
+            updateStats();
+            
+            // 显示奖励弹窗
+            showRewardModal(task);
+            
+            // 禁用按钮
+            const button = card.querySelector('.task-button');
+            button.className = 'task-button btn-disabled';
+            button.textContent = '已完成';
+            button.disabled = true;
+        }
+
+        // 显示奖励弹窗
+        function showRewardModal(task) {
+            const modal = document.getElementById('rewardModal');
+            const message = document.getElementById('rewardMessage');
+            message.textContent = `恭喜你完成"${task.title}"，获得 +${task.reward} 积分！`;
+            modal.classList.add('active');
+        }
+
+        // 关闭弹窗
+        function closeModal() {
+            const modal = document.getElementById('rewardModal');
+            modal.classList.remove('active');
+        }
+
+        // 更新统计数据
+        function updateStats() {
+            document.getElementById('totalPoints').textContent = totalPoints;
+            document.getElementById('completedTasks').textContent = completedTasksCount;
+            document.getElementById('remainingTasks').textContent = 8 - completedTasksCount;
+            
+            const percentage = (completedTasksCount / 8) * 100;
+            document.getElementById('overallPercentage').textContent = `${Math.round(percentage)}%`;
+            document.getElementById('overallProgressBar').style.width = `${percentage}%`;
+        }
+
+        // 模拟进度增长（用于演示）
+        function simulateProgress(taskId) {
+            const task = miniTasks[taskId];
+            const node = document.querySelector(`[data-task-id="${taskId}"]`);
+            
+            // 模拟任务进度
+            const interval = setInterval(() => {
+                if (task.progress < task.total) {
+                    task.progress += (task.total / 5); // 5步完成
+                    if (task.progress > task.total) task.progress = task.total;
+                    updateMiniTaskProgress(taskId);
+                } else {
+                    clearInterval(interval);
+                    completeMiniTask(taskId, node);
+                }
+            }, 600);
+        }
+
+        // 更新迷你任务进度
+        function updateMiniTaskProgress(taskId) {
+            const task = miniTasks[taskId];
+            const percentage = (task.progress / task.total) * 100;
+            const unit = task.unit || (taskId.includes('drive') ? 'km' : '次');
+            
+            const progressFill = document.getElementById(`progress-${taskId}`);
+            const progressCount = document.getElementById(`count-${taskId}`);
+            
+            if (progressFill) {
+                progressFill.style.width = `${percentage}%`;
+            }
+            if (progressCount) {
+                progressCount.textContent = Math.round(task.progress);
+            }
+        }
+
+        // 完成迷你任务
+        function completeMiniTask(taskId, node) {
+            const task = miniTasks[taskId];
+            
+            // 更新节点状态
+            node.classList.remove('active');
+            node.classList.add('completed');
+            
+            // 更改按钮
+            const button = node.querySelector('.mini-button');
+            button.className = 'mini-button btn-success';
+            button.textContent = '待领取';
+            button.onclick = () => claimMiniReward(taskId, node);
+            
+            // 如果是第4个任务完成,解锁第5个
+            if (taskId === 'penetration-30') {
+                const node5 = document.querySelector('[data-task-id="penetration-60"]');
+                if (node5) {
+                    node5.classList.remove('locked');
+                    node5.classList.add('active');
+                    const btn5 = node5.querySelector('.mini-button');
+                    btn5.className = 'mini-button btn-primary';
+                    btn5.textContent = '待完成';
+                    btn5.disabled = false;
+                    btn5.onclick = () => simulateProgress('penetration-60');
+                }
+            }
+            
+            // 如果是第5个任务完成,解锁第6个
+            if (taskId === 'penetration-60') {
+                const node6 = document.querySelector('[data-task-id="penetration-90"]');
+                if (node6) {
+                    node6.classList.remove('locked');
+                    node6.classList.add('active');
+                    const btn6 = node6.querySelector('.mini-button');
+                    btn6.className = 'mini-button btn-primary';
+                    btn6.textContent = '待完成';
+                    btn6.disabled = false;
+                    btn6.onclick = () => simulateProgress('penetration-90');
+                }
+            }
+        }
+
+        // 领取迷你任务奖励
+        function claimMiniReward(taskId, node) {
+            const task = miniTasks[taskId];
+            
+            // 增加积分
+            if (task.type === 'points') {
+                totalPoints += task.reward;
+            }
+            miniCompletedCount++;
+            
+            // 更新统计
+            updateMiniStats();
+            
+            // 显示奖励弹窗
+            showMiniRewardModal(task);
+            
+            // 更新按钮状态为已完成
+            const button = node.querySelector('.mini-button');
+            button.className = 'mini-button btn-disabled';
+            button.textContent = '已完成';
+            button.disabled = true;
+            button.onclick = null;
+        }
+
+        // 显示迷你任务奖励弹窗
+        function showMiniRewardModal(task) {
+            const modal = document.getElementById('rewardModal');
+            const message = document.getElementById('rewardMessage');
+            
+            let rewardText = '';
+            if (task.type === 'points') {
+                rewardText = `+${task.reward} 积分`;
+            } else if (task.type === 'lottery') {
+                rewardText = '获得抽奖资格';
+            } else if (task.type === 'badge') {
+                rewardText = '解锁专属勋章';
+            }
+            
+            message.textContent = `恭喜你完成"${task.title}"，${rewardText}！`;
+            modal.classList.add('active');
+        }
+
+        // 更新迷你任务统计
+        function updateMiniStats() {
+            document.getElementById('totalPoints').textContent = totalPoints;
+            document.getElementById('completedTasks').textContent = miniCompletedCount;
+            
+            const percentage = (miniCompletedCount / 6) * 100;
+            document.getElementById('overallPercentage').textContent = `${Math.round(percentage)}%`;
+            document.getElementById('overallProgressBar').style.width = `${percentage}%`;
+        }
+
+        // 初始化
+        updateCountdowns();
+        setInterval(updateCountdowns, 60000); // 每分钟更新一次倒计时
+    </script>
+</body>
+</html>
+
